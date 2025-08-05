@@ -1,15 +1,13 @@
-$installerPath = "C:\Instaladores"
-
 $apps = @{
-    1 = @{ Name = "Google Chrome"; File = "chrome.exe"; Args = "/silent /install" }
-    2 = @{ Name = "WinRAR"; File = "winrar-x64-701es"; Args = "/S" }
-    3 = @{ Name = "Office 365"; SubFolder = "Office"; File = "setup.exe"; Args = "/configure config.xml" }
-    4 = @{ Name = "Instalar Todos"; Special = $true }
+    1 = @{ Name = "Office"; Url = "https://drive.google.com/uc?export=download&id=1F-FQAhzvykbl1su52aptz6PXUto0Vr6_"; Args = "/S" }
+    2 = @{ Name = "Google Chrome"; Url = "https://drive.google.com/uc?export=download&id=1lig2GWyeLCwkuoXett8-3WOBH169qXTh"; Args = "/silent /install" }
+    3 = @{ Name = "WinRAR"; Url = "https://drive.google.com/uc?export=download&id=1wNAAtxwfbP1Ed70P6TVGRZRlm3stXEmO"; Args = "/S" }
+    4 = @{ Name = "Instalar TODOS"; Special = $true }
 }
 
 function Show-Menu {
     Clear-Host
-    Write-Host "===== Instalador Automático desde Carpeta Local =====" -ForegroundColor Cyan
+    Write-Host "===== Instalador Automático desde Google Drive =====" -ForegroundColor Cyan
     foreach ($key in $apps.Keys) {
         Write-Host "$key. $($apps[$key].Name)"
     }
@@ -19,21 +17,15 @@ function Show-Menu {
 }
 
 function Install-App($app) {
-    $appFolder = if ($app.ContainsKey("SubFolder")) {
-        Join-Path $installerPath $app.SubFolder
-    } else {
-        $installerPath
-    }
-
-    $fullPath = Join-Path $appFolder $app.File
-
-    if (-not (Test-Path $fullPath)) {
-        Write-Host "❌ Instalador no encontrado: $fullPath" -ForegroundColor Red
-        return
-    }
+    $tempFile = Join-Path $env:TEMP ([System.IO.Path]::GetRandomFileName() + ".exe")
+    
+    Write-Host "🌐 Descargando $($app.Name)..."
+    Invoke-WebRequest -Uri $app.Url -OutFile $tempFile
 
     Write-Host "🚀 Instalando $($app.Name)..."
-    Start-Process -FilePath $fullPath -ArgumentList $app.Args -WorkingDirectory $appFolder -Wait
+    Start-Process -FilePath $tempFile -ArgumentList $app.Args -Wait
+
+    Remove-Item $tempFile -Force
     Write-Host "✅ $($app.Name) instalado.`n"
 }
 
